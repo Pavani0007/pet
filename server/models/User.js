@@ -1,32 +1,29 @@
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
-  githubUsername: {
-    type: String,
-    required: true,
-    unique: true
+  githubUsername: { 
+    type: String, 
+    required: true, 
+    unique: true,
+    trim: true
   },
-  currentStreak: {
-    type: Number,
-    default: 0
+  leetcodeUsername: { 
+    type: String, 
+    trim: true,
+    validate: {
+      validator: function(v) {
+        return /^[a-zA-Z0-9_\-]+$/.test(v);
+      },
+      message: props => `${props.value} is not a valid LeetCode username!`
+    }
   },
-  longestStreak: {
-    type: Number,
-    default: 0
-  },
-  lastCommitDate: {
-    type: Date,
-    default: null
-  },
-  petStage: {
-    type: String,
-    enum: ['egg', 'baby', 'grown', 'evolved'],
-    default: 'egg'
-  },
-  totalCommits: {
-    type: Number,
-    default: 0
-  }
+  currentStreak: { type: Number, default: 0 },
+  longestStreak: { type: Number, default: 0 },
+  petStage: { type: String, default: 'egg' },
+  lastCommitDate: Date,
+  lastLeetcodeDate: Date,
+  totalCommits: { type: Number, default: 0 },
+  totalLeetcode: { type: Number, default: 0 }
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

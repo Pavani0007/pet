@@ -12,8 +12,7 @@ const ReposPage = () => {
   const navigate = useNavigate();
   const username = location.state?.username || localStorage.getItem('github-username') || '';
 
-  const API_BASE_URL = 'http://localhost:5000/api';
-
+  const API_BASE_URL = 'http://localhost:5000';
 
   const fetchUserRepos = useCallback(async () => {
     if (!username) return;
@@ -21,11 +20,11 @@ const ReposPage = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.get(`${API_BASE_URL}/user-repos/${username}`);
+      const res = await axios.get(`${API_BASE_URL}/api/user-repos/${username}`);
       
       // Sort by pushed_at date (newest first)
       const sortedRepos = res.data.repos.sort((a, b) => {
-        return new Date(b.last_commit) - new Date(a.last_commit);
+        return new Date(b.pushed_at) - new Date(a.pushed_at);
       });
 
       setRepos(sortedRepos);
@@ -33,17 +32,14 @@ const ReposPage = () => {
       setError(err.response?.data?.error || 'Failed to fetch repositories');
     }
     setLoading(false);
-  }, [username]);
-
-  // ... rest of the component ...
-
+  }, [username, API_BASE_URL]);
 
   useEffect(() => {
     fetchUserRepos();
   }, [fetchUserRepos]);
 
   const handleBackToPet = () => {
-    navigate('/', { state: { username } });
+    navigate('/');
   };
 
   const filteredRepos = repos.filter(repo =>
@@ -95,7 +91,6 @@ const ReposPage = () => {
                 <div className="repo-stats">
                   <span title="Stars">⭐ {repo.stargazers_count}</span>
                   <span title="Forks">🍴 {repo.forks_count}</span>
-                  <span title="Commits">📝 {repo.commit_count}</span>
                 </div>
                 <div className="repo-footer">
                   <a
@@ -106,10 +101,9 @@ const ReposPage = () => {
                   >
                     View on GitHub
                   </a>
-                  {(repo.last_commit || repo.pushed_at) && (
+                  {repo.pushed_at && (
                     <span className="last-commit">
-                      Last commit:{' '}
-                      {new Date(repo.last_commit || repo.pushed_at).toLocaleString()}
+                      Last commit: {new Date(repo.pushed_at).toLocaleString()}
                     </span>
                   )}
                 </div>

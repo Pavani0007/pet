@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import PetPage from './PetPage';
 import ReposPage from './ReposPage';
+import LeetCodePage from './LeetCodePage';
 import './App.css';
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
           <nav className="main-nav">
             <Link to="/" className="nav-link">My Pet</Link>
             <Link to="/repos" className="nav-link">My Repos</Link>
+            <Link to="/leetcode" className="nav-link">LeetCode Stats</Link>
           </nav>
         </header>
 
@@ -20,6 +22,7 @@ function App() {
           <Routes>
             <Route path="/" element={<PetPage />} />
             <Route path="/repos" element={<ReposPage />} />
+            <Route path="/leetcode" element={<LeetCodePage />} />
           </Routes>
         </main>
 

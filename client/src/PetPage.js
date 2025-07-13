@@ -1,64 +1,89 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import Confetti from 'react-confetti';
 import { useNavigate } from 'react-router-dom';
 import './App.css';
+import LeetCodeForm from './components/LeetCodeForm';
 
 const PetPage = () => {
   const [username, setUsername] = useState(() => {
-  return localStorage.getItem('github-username') || '';
-});
-const handleUsernameChange = (e) => {
-  const newUsername = e.target.value;
-  setUsername(newUsername);
-  localStorage.setItem('github-username', newUsername);
-};
+    return localStorage.getItem('github-username') || '';
+  });
+
+  const handleUsernameChange = (e) => {
+    const newUsername = e.target.value;
+    setUsername(newUsername);
+    localStorage.setItem('github-username', newUsername);
+  };
 
   const [petData, setPetData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
+  const [streakSame, setStreakSame] = useState(false);
+  const [showLeetCodeForm, setShowLeetCodeForm] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const navigate = useNavigate();
 
-  const API_BASE_URL = 'http://localhost:5000/api';
+  const API_BASE_URL = 'http://localhost:5000';
 
-  // Add retry logic and better loading states
-const [retryCount, setRetryCount] = useState(0);
+  const fetchPetData = useCallback(async () => {
+    if (!username) return;
 
-const fetchPetData = useCallback(async () => {
-  if (!username) return;
-  
-  setLoading(true);
-  setError('');
-  try {
-    const res = await axios.get(`${API_BASE_URL}/pet/${username}`);
-    setPetData(res.data);
-    
-    if (res.data.petStage === 'evolved') {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 5000);
+    setLoading(true);
+    setError('');
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/pet/${username}`);
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toDateString();
+
+      if (res.data.lastCommitDate) {
+        const lastCommitDate = new Date(res.data.lastCommitDate);
+        setStreakSame(
+          lastCommitDate.toDateString() === yesterdayStr &&
+          res.data.currentStreak > 0
+        );
+      } else {
+        setStreakSame(false);
+      }
+
+      setPetData(res.data);
+      
+
+      if (res.data.petStage === 'evolved') {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 5000);
+      }
+    } catch (err) {
+      // In PetPage.js, inside catch block of fetchPetData
+      if (err.response?.status === 404) {
+        setError('GitHub user not found. Please check your username.');
+      } else if (err.response?.status === 429) {
+        setError('GitHub API limit reached. Try again later or add a GitHub token.');
+      } else {
+        setError(err.response?.data?.error || 'Failed to fetch pet data');
+      }
+      if (err.response?.status === 429) {
+        setError('GitHub API limit reached. Try again later or add a GitHub token.');
+      } else {
+        setError(err.response?.data?.error || 'Failed to fetch pet data');
+      }
+      setRetryCount(prev => prev + 1);
     }
-  } catch (err) {
-    if (err.response?.status === 429) {
-      // Rate limited - suggest adding token
-      setError('GitHub API limit reached. Try again later or add a GitHub token.');
-    } else {
-      setError(err.response?.data?.error || 'Failed to fetch pet data');
-    }
-    setRetryCount(prev => prev + 1);
-  }
-  setLoading(false);
-}, [username]);
+    setLoading(false);
+  }, [username, API_BASE_URL]);
 
-// Auto-retry with exponential backoff
-useEffect(() => {
-  if (error && retryCount < 3) {
-    const timer = setTimeout(() => {
-      fetchPetData();
-    }, Math.min(1000 * 2 ** retryCount, 30000));
-    return () => clearTimeout(timer);
-  }
-}, [error, retryCount, fetchPetData]);
+  useEffect(() => {
+    if (error && retryCount < 3) {
+      const timer = setTimeout(() => {
+        fetchPetData();
+      }, Math.min(1000 * 2 ** retryCount, 30000));
+      return () => clearTimeout(timer);
+    }
+  }, [error, retryCount, fetchPetData]);
 
   useEffect(() => {
     fetchPetData();
@@ -68,6 +93,7 @@ useEffect(() => {
     navigate('/repos', { state: { username } });
   };
 
+  
   const getMotivationalMessage = () => {
     if (!petData) return '';
     const messages = {
@@ -88,7 +114,7 @@ useEffect(() => {
         "Your pet is thriving thanks to your dedication!"
       ]
     };
-    
+
     const stageMessages = messages[petData.petStage] || ["Keep committing to grow your pet!"];
     return stageMessages[Math.floor(Math.random() * stageMessages.length)];
   };
@@ -96,7 +122,7 @@ useEffect(() => {
   return (
     <div className="page-container">
       {showConfetti && <Confetti recycle={false} numberOfPieces={500} />}
-      
+
       <div className="input-section">
         <input
           value={username}
@@ -110,15 +136,7 @@ useEffect(() => {
           disabled={loading}
           className="action-button"
         >
-          {loading ? (
-            <>
-              <span className="loading-dots">
-                <span>.</span><span>.</span><span>.</span>
-              </span>
-            </>
-          ) : (
-            'Get My Pet'
-          )}
+          {loading ? 'Loading...' : 'Get My Pet'}
         </button>
       </div>
 
@@ -131,63 +149,95 @@ useEffect(() => {
               {getPetEmoji(petData.petStage)}
               <div className="pet-level">Level: {petData.petStage}</div>
             </div>
-            
+
             <div className="stats-container">
               <h2>{username}'s Coding Companion</h2>
               <p className="motivation-message">{getMotivationalMessage()}</p>
-              
+
               <div className="stat-row">
                 <span className="stat-label">Current Streak:</span>
                 <span className="stat-value">{petData.currentStreak ?? 0} days</span>
                 {petData.currentStreak > 0 && <span className="fire-emoji">🔥</span>}
               </div>
-              
+
               <div className="stat-row">
                 <span className="stat-label">Longest Streak:</span>
-                <span className="stat-value">{petData.longestStreak} days</span>
+                <span className="stat-value">{petData.longestStreak ?? 0} days</span>
               </div>
-              
+
               <div className="progress-container">
                 <div className="progress-bar">
                   <div 
                     className="progress-fill"
                     style={{ width: `${((petData.currentStreak ?? 0) / 21) * 100}%` }}
-
                   ></div>
                 </div>
                 <div className="progress-text">
                   {Math.round((1-(petData.currentStreak ?? 0) / 21) * 100)}% to next evolution
-
                 </div>
               </div>
-              
+
               <button 
                 onClick={handleViewRepos}
                 className="action-button secondary"
               >
                 View My Repositories
               </button>
+
+              <div className="leetcode-section">
+                {!petData.leetcodeUsername && !showLeetCodeForm && (
+                  <button 
+                    onClick={() => setShowLeetCodeForm(true)}
+                    className="action-button secondary"
+                    style={{ marginTop: '1rem' }}
+                  >
+                    Connect LeetCode Account
+                  </button>
+                )}
+
+                {showLeetCodeForm && (
+                  <LeetCodeForm 
+                    githubUsername={username} 
+                    onClose={() => {
+                      setShowLeetCodeForm(false);
+                      fetchPetData();
+                    }} 
+                  />
+                )}
+
+                {petData.leetcodeUsername && (
+                  <div className="leetcode-connected">
+                    <p>Connected to LeetCode: <strong>{petData.leetcodeUsername}</strong></p>
+                    <button 
+                      onClick={() => setShowLeetCodeForm(true)}
+                      className="action-button secondary"
+                    >
+                      Change Account
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-          
-          <div className="evolution-path">
-            <h3>Evolution Path</h3>
-            <div className="evolution-stages">
-              <div className={`stage ${petData.petStage === 'egg' ? 'active' : ''}`}>
-                <span>🥚 Egg</span>
-                <p>0-6 days</p>
-              </div>
-              <div className={`stage ${petData.petStage === 'baby' ? 'active' : ''}`}>
-                <span>🐣 Baby</span>
-                <p>7-13 days</p>
-              </div>
-              <div className={`stage ${petData.petStage === 'grown' ? 'active' : ''}`}>
-                <span>🐥 Grown</span>
-                <p>14-20 days</p>
-              </div>
-              <div className={`stage ${petData.petStage === 'evolved' ? 'active' : ''}`}>
-                <span>🐔 Evolved</span>
-                <p>21+ days</p>
+
+            <div className="evolution-path">
+              <h3>Evolution Path</h3>
+              <div className="evolution-stages">
+                <div className={`stage ${petData.petStage === 'egg' ? 'active' : ''}`}>
+                  <span>🥚 Egg</span>
+                  <p>0-6 days</p>
+                </div>
+                <div className={`stage ${petData.petStage === 'baby' ? 'active' : ''}`}>
+                  <span>🐣 Baby</span>
+                  <p>7-13 days</p>
+                </div>
+                <div className={`stage ${petData.petStage === 'grown' ? 'active' : ''}`}>
+                  <span>🐥 Grown</span>
+                  <p>14-20 days</p>
+                </div>
+                <div className={`stage ${petData.petStage === 'evolved' ? 'active' : ''}`}>
+                  <span>🐔 Evolved</span>
+                  <p>21+ days</p>
+                </div>
               </div>
             </div>
           </div>
@@ -196,7 +246,6 @@ useEffect(() => {
     </div>
   );
 };
-
 
 const getPetEmoji = (stage) => {
   switch(stage) {

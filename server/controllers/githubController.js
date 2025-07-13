@@ -2,81 +2,51 @@ import axios from 'axios';
 import User from '../models/User.js';
 import mongoose from 'mongoose';
 
-// Configure GitHub API headers
-const GITHUB_API_CACHE = new Map();
-const CACHE_DURATION = 60 * 60 * 1000;
-
 const getGitHubHeaders = () => ({
   Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
   Accept: 'application/vnd.github+json',
   'X-GitHub-Api-Version': '2022-11-28'
 });
 
-// Helper function to check consecutive days
 const isConsecutiveDay = (date1, date2) => {
   const oneDay = 24 * 60 * 60 * 1000;
   return Math.abs(new Date(date1) - new Date(date2)) <= oneDay;
 };
 
-
 export const getUserRepos = async (req, res) => {
   const { username } = req.params;
-  const cacheKey = `repos-${username}`;
-
+  
   try {
-    // Check cache first
-    if (GITHUB_API_CACHE.has(cacheKey)) {
-      const cached = GITHUB_API_CACHE.get(cacheKey);
-      if (Date.now() - cached.timestamp < CACHE_DURATION) {
-        return res.json(cached.data);
-      }
-    }
-
     // Verify GitHub user exists
     await axios.get(`https://api.github.com/users/${username}`, {
       headers: getGitHubHeaders()
     });
 
-    // Get all user repositories
+    // Get repositories
     const reposResponse = await axios.get(
-      `https://api.github.com/users/${username}/repos?per_page=100&sort=pushed`,
+      `https://api.github.com/users/${username}/repos?sort=updated&direction=desc`,
       { headers: getGitHubHeaders() }
     );
 
-    // Cache the response
-    const responseData = {
+    const repos = reposResponse.data.map(repo => ({
+      id: repo.id,
+      name: repo.name,
+      description: repo.description,
+      html_url: repo.html_url,
+      stargazers_count: repo.stargazers_count,
+      forks_count: repo.forks_count,
+      pushed_at: repo.pushed_at,
+      created_at: repo.created_at,
+      updated_at: repo.updated_at
+    }));
+
+    res.json({
       success: true,
-      username,
-      repos: reposResponse.data.map(repo => ({
-        id: repo.id,
-        name: repo.name,
-        description: repo.description,
-        html_url: repo.html_url,
-        stargazers_count: repo.stargazers_count,
-        forks_count: repo.forks_count,
-        pushed_at: repo.pushed_at,  // Add pushed_at
-        created_at: repo.created_at, // Add created_at
-        updated_at: repo.updated_at // Add updated_at
-      }))
-    };
-
-    GITHUB_API_CACHE.set(cacheKey, {
-      timestamp: Date.now(),
-      data: responseData
+      repos
     });
-
-    res.json(responseData);
   } catch (error) {
-    console.error('GitHub API Error:', error.message);
-    
-    if (error.response?.status === 403) {
-      return res.status(429).json({
-        error: 'GitHub API rate limit exceeded',
-        details: 'Please try again later or add a GITHUB_TOKEN in your .env'
-      });
-    }
-    
-    res.status(error.response?.status || 500).json({
+    console.error('GitHub API Error:', error);
+    res.status(500).json({
       error: 'Failed to fetch repositories',
       details: error.response?.data?.message || error.message
     });
@@ -84,81 +54,100 @@ export const getUserRepos = async (req, res) => {
 };
 
 export const updatePetStats = async (req, res) => {
-  if (mongoose.connection.readyState !== 1) {
-    return res.status(503).json({ error: 'Database not connected' });
-  }
-
-  const { username } = req.params;
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-
   try {
-    await axios.get(`https://api.github.com/users/${username}`, {
-      headers: getGitHubHeaders()
-    });
+    // 1. Check database connection
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        error: 'Database not connected',
+        details: 'Please try again later'
+      });
+    }
 
+    const { username } = req.params;
+    if (!username) {
+      return res.status(400).json({ error: 'Username is required' });
+    }
+
+    // 2. Verify GitHub user exists
+    await axios.get(`https://api.github.com/users/${username}`, { headers: getGitHubHeaders() });
+
+    // 2. Find or create user in MongoDB
     let user = await User.findOne({ githubUsername: username });
     if (!user) {
-      user = new User({ githubUsername: username });
+      user = new User({
+        githubUsername: username,
+        currentStreak: 0,
+        longestStreak: 0,
+        petStage: 'egg',
+        lastCommitDate: null,
+        totalCommits: 0
+      });
+      await user.save();
     }
 
-    const since = new Date(Date.now() - 30 * 86400000).toISOString();
-    let commits = [];
 
-    try {
-      const search = await axios.get(
-        `https://api.github.com/search/commits?q=author:${username}+author-date:>=${since}`,
-        { headers: getGitHubHeaders() }
-      );
-      commits = search.data.items.map(c => c.commit.author.date);
-    } catch (e) {
-      console.warn('Search API failed, falling back to repos.');
-    }
+    // 4. Get commits from last 30 days
+    const sinceDate = new Date();
+    sinceDate.setDate(sinceDate.getDate() - 30);
+    
+    const commitsResponse = await axios.get(
+      `https://api.github.com/search/commits?q=author:${username}+author-date:>=${sinceDate.toISOString()}`,
+      { headers: getGitHubHeaders() }
+    );
+    
+    const commits = commitsResponse.data.items;
+    const commitDates = commits.map(c => new Date(c.commit.author.date));
+    const uniqueCommitDays = [...new Set(commitDates.map(d => d.toDateString()))];
 
-    // ⛔ If search failed or returned stale data, use repo fallback
-    if (!commits.some(date => date.slice(0, 10) === todayStr)) {
-      const repoRes = await axios.get(
-        `https://api.github.com/users/${username}/repos?per_page=100`,
-        { headers: getGitHubHeaders() }
-      );
-      commits = repoRes.data.map(r => r.pushed_at);
-    }
+    // 5. Calculate dates for comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
 
-    const commitDays = new Set(commits.map(d => d.slice(0, 10)));
+    // 6. Determine if user committed today
+    const hasCommittedToday = uniqueCommitDays.some(d => 
+      new Date(d).toDateString() === today.toDateString()
+    );
 
-    const hasToday = commitDays.has(todayStr);
-    const hasYesterday = commitDays.has(yesterdayStr);
-    const lastDayStr = user.lastCommitDate?.toISOString().slice(0, 10);
-
-    if (hasToday) {
-      if (lastDayStr === todayStr) {
-        // already recorded
-      } else if (lastDayStr === yesterdayStr) {
-        user.currentStreak += 1;
-      } else {
-        user.currentStreak = 1;
+    // 7. Update streak logic
+    if (hasCommittedToday) {
+      if (!user.lastCommitDate || new Date(user.lastCommitDate).toDateString() !== today.toDateString()) {
+        if (!user.lastCommitDate || !isConsecutiveDay(today, user.lastCommitDate)) {
+          user.currentStreak = 1;
+        } else {
+          user.currentStreak += 1;
+        }
+        user.lastCommitDate = today;
       }
-      user.lastCommitDate = new Date();
     } else {
-      if (lastDayStr !== yesterdayStr) {
+      if (user.lastCommitDate && !isConsecutiveDay(today, user.lastCommitDate)) {
         user.currentStreak = 0;
       }
     }
 
+    // 8. Update longest streak
     if (user.currentStreak > user.longestStreak) {
       user.longestStreak = user.currentStreak;
     }
 
-    // Update pet stage
+    // 9. Update pet stage
     if (user.currentStreak >= 21) user.petStage = 'evolved';
     else if (user.currentStreak >= 14) user.petStage = 'grown';
     else if (user.currentStreak >= 7) user.petStage = 'baby';
     else user.petStage = 'egg';
 
+    // 10. Update total commits
     user.totalCommits = commits.length;
     await user.save();
 
-    res.json({
+    // 11. Prepare response
+    const streakSame = user.lastCommitDate && 
+      new Date(user.lastCommitDate).toDateString() === yesterday.toDateString() &&
+      !hasCommittedToday;
+
+    return res.json({
       success: true,
       username: user.githubUsername,
       currentStreak: user.currentStreak,
@@ -166,20 +155,35 @@ export const updatePetStats = async (req, res) => {
       petStage: user.petStage,
       totalCommits: user.totalCommits,
       lastCommitDate: user.lastCommitDate,
+      streakSame:null,
       message: getPetMessage(user.petStage)
     });
-  } catch (err) {
-    console.error('updatePetStats error:', err.message);
-    res.status(err.response?.status || 500).json({
-      error: err.response?.data?.message || err.message
+
+  } catch (error) {
+    console.error('Error in updatePetStats:', error);
+    
+    let statusCode = 500;
+    let errorMessage = 'Failed to update pet stats';
+    
+    if (error.response?.status === 404) {
+      statusCode = 404;
+      errorMessage = 'GitHub user not found';
+    } else if (error.response?.status === 403) {
+      statusCode = 429;
+      errorMessage = 'GitHub API rate limit exceeded';
+    } else if (error.name === 'ValidationError') {
+      statusCode = 400;
+      errorMessage = error.message;
+    }
+
+    return res.status(statusCode).json({
+      success: false,
+      error: errorMessage,
+      details: error.response?.data?.message || error.message
     });
   }
-}
+};
 
-
-
-
-// Helper function for pet messages
 const getPetMessage = (petStage) => {
   const messages = {
     egg: "Keep committing daily to hatch your egg!",
@@ -191,7 +195,6 @@ const getPetMessage = (petStage) => {
 };
 
 // Additional controller functions
-
 export const getRepoCommits = async (req, res) => {
   const { owner, repo } = req.params;
   
