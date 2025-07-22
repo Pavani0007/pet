@@ -132,6 +132,31 @@ const LeetCodePage = () => {
               </button>
             </div>
           )}
+          
+
+    {leetcodeData && (
+      <div className="leetcode-profile">
+        <h3>
+          <a 
+            href={`https://leetcode.com/${leetcodeData.username}/`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+           
+          </a>
+            </h3>
+            
+            {leetcodeData.todaysSubmissionCount > 0 ? (
+              <p style={{ color: "#00b894", fontWeight: 600 }}>
+                ✅ You have submitted {leetcodeData.todaysSubmissionCount} problem{leetcodeData.todaysSubmissionCount > 1 ? 's' : ''} today!
+              </p>
+            ) : (
+              <p style={{ color: "#d63031", fontWeight: 600 }}>
+                ⏳ No submissions yet today.
+              </p>
+            )}
+          </div>
+        )}
         </div>
       )}
     </div>

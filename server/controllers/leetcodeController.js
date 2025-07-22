@@ -55,27 +55,43 @@ export const updateLeetcodeStats = async (req, res) => {
     const hardSolved = acStats.find(s => s.difficulty === 'Hard')?.count || 0;
 
     // Parse calendar for streak
-    let currentStreak = 0;
+    // let currentStreak = 0;
     let longestStreak = 0;
     let lastLeetcodeDate = null;
 
     const calendar = data.submissionCalendar ? JSON.parse(data.submissionCalendar) : {};
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayKey = Math.floor(today.getTime() / 1000);
+    const now = new Date();
+    const utcMidnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const todayKey = Math.floor(utcMidnight.getTime() / 1000);
+    const yesterdayKey = todayKey - 86400;
     const solvedToday = calendar[todayKey] > 0;
+    const todaysSubmissionCount = calendar[todayKey] || 0;
 
-    // Calculate streak (simple version: count consecutive days up to today)
+
+    console.log('todayKey:', todayKey, 'calendar[todayKey]:', calendar[todayKey]);
+    console.log('calendar keys:', Object.keys(calendar).slice(-5));
+
+    let yesterdayStreak = 0;
+    let day = yesterdayKey;
+    while (calendar[day] && calendar[day] > 0) {
+      yesterdayStreak++;
+      day -= 86400;
+    }
+
     let streak = 0;
-    let day = todayKey;
+    day = todayKey;
     while (calendar[day] && calendar[day] > 0) {
       streak++;
-      day -= 86400; // subtract one day in seconds
+      day -= 86400;
     }
-    currentStreak = streak;
+    let currentStreak = streak;
 
-    // Find longest streak
-    // (Optional: implement a more advanced streak calculation if needed)
+    // If last activity is today, but streak is same as yesterday, increment by 1
+    if (solvedToday && currentStreak === yesterdayStreak) {
+      currentStreak = yesterdayStreak + 1;
+    }
+
+    
 
     // Find last activity date
     const submissionTimestamps = Object.keys(calendar)
@@ -94,7 +110,8 @@ export const updateLeetcodeStats = async (req, res) => {
       hardSolved,
       currentStreak,
       lastUpdated: lastLeetcodeDate,
-      solvedToday
+      solvedToday: todaysSubmissionCount > 0,
+      todaysSubmissionCount // <-- add this line
     });
 
   } catch (error) {
