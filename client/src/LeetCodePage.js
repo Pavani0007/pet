@@ -96,7 +96,11 @@ const LeetCodePage = () => {
                     {leetcodeData.username}
                   </a>
                 </h3>
-                <p>Last activity: {leetcodeData.lastUpdated ? new Date(leetcodeData.lastUpdated).toLocaleString() : 'Never'}</p>
+                <p>
+                Last activity: {leetcodeData.lastUpdated 
+                  ? new Date(leetcodeData.lastUpdated).toLocaleDateString() 
+                  : 'Never'}
+              </p>
               </div>
 
               <div className="leetcode-cards">

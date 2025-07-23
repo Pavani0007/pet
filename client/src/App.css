@@ -1,4 +1,3 @@
-/* Base Styles */
 :root {
   --primary: #2d3436;
   --secondary: #0984e3;
@@ -9,126 +8,259 @@
   --error: #d63031;
   --text: #2d3436;
   --bg: #f5f6fa;
+  --glass-bg: rgba(255, 255, 255, 0.15);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --shadow-dark: rgba(0, 0, 0, 0.15);
 }
 
 body {
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: var(--bg);
+  background: linear-gradient(135deg, #e0f7fa, #f5fafd);
   color: var(--text);
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* App Layout */
-.app-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Header Styles */
+/* Header with subtle layered shadow and smooth gradient */
 .app-header {
   background: linear-gradient(135deg, var(--secondary), var(--accent));
   color: white;
-  padding: 1.5rem;
+  padding: 2rem 1.5rem;
   text-align: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 4px 12px var(--shadow-dark),
+    inset 0 -3px 8px rgba(255,255,255,0.15);
+  letter-spacing: 0.6px;
+  font-weight: 700;
+  font-size: 2.4rem;
+  user-select: none;
+  transition: background 0.3s ease;
 }
 
-.app-header h1 {
-  margin: 0;
-  font-size: 2.2rem;
-  letter-spacing: 0.5px;
-}
-
-/* Navigation */
+/* Navigation with subtle shadows and smooth hover scale */
 .main-nav {
   display: flex;
   justify-content: center;
-  gap: 1.5rem;
-  margin-top: 1.2rem;
+  gap: 2rem;
+  margin-top: 1.8rem;
+  user-select: none;
 }
 
 .nav-link {
   color: white;
   text-decoration: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 25px;
-  transition: all 0.3s ease;
-  font-weight: 500;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.nav-link:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-}
-
-.leetcode-prompt {
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-top: 2rem;
-  animation: fadeIn 0.5s ease;
-}
-
-.prompt-header {
-  margin-bottom: 1rem;
-}
-
-.prompt-header h3 {
-  color: #ffa116;
-  margin-bottom: 0.5rem;
-}
-
-.daily-question {
-  background: white;
-  padding: 1rem;
-  border-radius: 6px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.daily-question h4 {
-  color: #263238;
-  margin-top: 0;
-}
-
-.leetcode-link {
-  display: inline-block;
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  background: #ffa116;
-  color: white;
-  text-decoration: none;
-  border-radius: 4px;
+  padding: 0.8rem 1.8rem;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.15);
   font-weight: 600;
-  transition: all 0.2s;
+  font-size: 1.05rem;
+  box-shadow: 0 2px 8px rgba(255,255,255,0.2);
+  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
-.leetcode-link:hover {
-  background: #e69100;
-  transform: translateY(-2px);
+.nav-link:hover,
+.nav-link:focus {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+  box-shadow: 0 4px 14px rgba(255,255,255,0.4);
+  outline: none;
 }
 
-/* Main Content */
-.main-content {
-  flex: 1;
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Shared Page Styles */
+/* Glassmorphism card style for containers */
 .page-container {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  animation: fadeIn 0.5s ease;
+  background: var(--glass-bg);
+  border-radius: 20px;
+  padding: 2.5rem 3rem;
+  box-shadow:
+    0 8px 32px rgba(0, 206, 201, 0.15),
+    0 0 15px var(--glass-border);
+  backdrop-filter: blur(15px);
+  border: 1px solid var(--glass-border);
+  animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* Buttons with gradient backgrounds, smooth scale & shadows */
+.action-button {
+  background: linear-gradient(135deg, var(--secondary), var(--accent));
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 40px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(9, 132, 227, 0.45);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.action-button:hover,
+.action-button:focus {
+  background: linear-gradient(135deg, var(--accent), var(--secondary));
+  box-shadow: 0 10px 25px rgba(0, 206, 201, 0.7);
+  transform: scale(1.05);
+  outline: none;
+}
+
+.action-button.secondary {
+  background: linear-gradient(135deg, #ffffffee, #e0f7faee);
+  color: var(--secondary);
+  border: 2px solid var(--accent);
+  box-shadow: 0 4px 14px rgba(0,206,201,0.25);
+}
+
+.action-button.secondary:hover {
+  background: #e0f7fa;
+  color: var(--success);
+  border-color: var(--success);
+  box-shadow: 0 8px 20px rgba(0, 184, 148, 0.6);
+  transform: scale(1.05);
+}
+
+/* Pet Display with glowing shadows and smooth floating */
+.pet-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2rem;
+  background: linear-gradient(135deg, #f5fafd 70%, #e0f7fa 100%);
+  border-radius: 24px;
+  box-shadow:
+    0 12px 40px rgba(0, 206, 201, 0.18),
+    0 3px 12px rgba(9,132,227,0.1);
+  padding: 3rem 3rem 2.5rem;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+
+.pet-image {
+  font-size: 10rem;
+  filter: drop-shadow(0 10px 30px rgba(0, 206, 201, 0.25));
+  margin-bottom: 0.75rem;
+  transition: transform 0.4s ease;
+  cursor: default;
+}
+
+.pet-image:hover {
+  transform: scale(1.12) rotate(-6deg);
+}
+
+/* Smooth glowing effect for evolved pets */
+.pet-image.evolved {
+  animation: float 4s ease-in-out infinite, glow 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from { filter: drop-shadow(0 0 6px rgba(0, 206, 201, 0.6)); }
+  to { filter: drop-shadow(0 0 20px rgba(0, 206, 201, 1)); }
+}
+
+/* Stat rows with subtle fade & spacing */
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2rem 0;
+  border-bottom: 1px solid #d0f0f3;
+  font-size: 1.15rem;
+  transition: background-color 0.3s;
+}
+
+.stat-row:hover {
+  background-color: #e0f7fa;
+  border-color: #a0dfe6;
+}
+
+.stat-label {
+  color: #555;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  color: var(--accent);
+  font-weight: 900;
+  font-size: 1.3rem;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.07);
+}
+
+/* Progress bars with soft shadows and smooth transitions */
+.progress-bar {
+  height: 18px;
+  background: #d0f0f3;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 0.9rem;
+  box-shadow: inset 0 2px 5px rgba(255,255,255,0.7);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00b894, #00cec9, #0984e3);
+  border-radius: 12px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 2px 8px rgba(0,206,201,0.5),
+    inset 0 1px 3px rgba(255,255,255,0.5);
+}
+
+.progress-text {
+  text-align: right;
+  font-size: 1rem;
+  color: #555;
+  opacity: 0.75;
+  font-weight: 600;
+  margin-top: -22px;
+  margin-bottom: 1rem;
+  user-select: none;
+}
+
+/* Loading spinner with smooth rotation */
+.refreshing {
+  animation: spin 1.2s linear infinite;
+  display: inline-block;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Improvements */
+@media (max-width: 600px) {
+  .app-header {
+    font-size: 1.8rem;
+    padding: 1.5rem 1rem;
+  }
+  
+  .nav-link {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
+  }
+  
+  .pet-display {
+    flex-direction: column;
+    padding: 2rem 1rem;
+  }
+  
+  .pet-image {
+    font-size: 8rem;
+  }
+  
+  .page-container {
+    padding: 2rem 1.5rem;
+    border-radius: 16px;
+  }
+}
+
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
