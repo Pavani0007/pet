@@ -111,7 +111,8 @@ export const updateLeetcodeStats = async (req, res) => {
       currentStreak,
       lastUpdated: lastLeetcodeDate,
       solvedToday: todaysSubmissionCount > 0,
-      todaysSubmissionCount // <-- add this line
+      todaysSubmissionCount,
+      message: `✅ You have ${todaysSubmissionCount} accepted submission${todaysSubmissionCount === 1 ? '' : 's'} today!`
     });
 
   } catch (error) {

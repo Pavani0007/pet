@@ -148,7 +148,7 @@ const LeetCodePage = () => {
             
             {leetcodeData.todaysSubmissionCount > 0 ? (
               <p style={{ color: "#00b894", fontWeight: 600 }}>
-                ✅ You have submitted {leetcodeData.todaysSubmissionCount} problem{leetcodeData.todaysSubmissionCount > 1 ? 's' : ''} today!
+              ✅ You have {leetcodeData.todaysSubmissionCount} accepted submission{leetcodeData.todaysSubmissionCount > 1 ? 's' : ''} today!
               </p>
             ) : (
               <p style={{ color: "#d63031", fontWeight: 600 }}>
