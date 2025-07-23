@@ -99,33 +99,33 @@ export const updatePetStats = async (req, res) => {
     const commitDates = commits.map(c => new Date(c.commit.author.date));
     const uniqueCommitDays = [...new Set(commitDates.map(d => d.toDateString()))];
 
-    // 5. Calculate dates for comparison
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
 
-    // 6. Determine if user committed today
-    const hasCommittedToday = uniqueCommitDays.some(d => 
-      new Date(d).toDateString() === today.toDateString()
-    );
+    // 5. Calculate streak based on consecutive days
+    const sortedDates = uniqueCommitDays
+      .map(d => new Date(d))
+      .sort((a, b) => b - a); // Descending
 
-    // 7. Update streak logic
-    if (hasCommittedToday) {
-      if (!user.lastCommitDate || new Date(user.lastCommitDate).toDateString() !== today.toDateString()) {
-        if (!user.lastCommitDate || !isConsecutiveDay(today, user.lastCommitDate)) {
-          user.currentStreak = 1;
-        } else {
-          user.currentStreak += 1;
-        }
-        user.lastCommitDate = today;
-      }
-    } else {
-      if (user.lastCommitDate && !isConsecutiveDay(today, user.lastCommitDate)) {
-        user.currentStreak = 0;
+    let currentStreak = 0;
+
+    for (let i = 0; i < sortedDates.length; i++) {
+      const expectedDate = new Date();
+      expectedDate.setDate(today.getDate() - i);
+
+      if (sortedDates[i].toDateString() === expectedDate.toDateString()) {
+        currentStreak++;
+      } else {
+        break; 
       }
     }
+
+    user.currentStreak = currentStreak;
+    if (currentStreak > user.longestStreak) {
+      user.longestStreak = currentStreak;
+    }
+    user.lastCommitDate = sortedDates[0]; 
+
 
     // 8. Update longest streak
     if (user.currentStreak > user.longestStreak) {
@@ -142,10 +142,17 @@ export const updatePetStats = async (req, res) => {
     user.totalCommits = commits.length;
     await user.save();
 
-    // 11. Prepare response
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    const hasCommittedToday = uniqueCommitDays.some(d =>
+      new Date(d).toDateString() === today.toDateString()
+    );
+
     const streakSame = user.lastCommitDate && 
       new Date(user.lastCommitDate).toDateString() === yesterday.toDateString() &&
       !hasCommittedToday;
+
 
     return res.json({
       success: true,
