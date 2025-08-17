@@ -53,7 +53,18 @@ const PetPage = () => {
       setPetData(res.data);
       
 
-      if (res.data.petStage === 'evolved') {
+      // Calculate current pet stage based on max streak
+      const maxStreak = Math.max(res.data.currentStreak ?? 0, res.data.currentLeetcodeStreak ?? 0);
+      let calculatedStage = 'egg';
+      if (maxStreak >= 21) calculatedStage = 'evolved';
+      else if (maxStreak >= 14) calculatedStage = 'grown';
+      else if (maxStreak >= 7) calculatedStage = 'baby';
+      console.log('Max Streak:', maxStreak, 'Stage:', calculatedStage);
+      
+      // Override the petStage with our calculation
+      res.data.petStage = calculatedStage;
+
+      if (calculatedStage === 'evolved') {
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 5000);
       }
@@ -62,11 +73,6 @@ const PetPage = () => {
       if (err.response?.status === 404) {
         setError('GitHub user not found. Please check your username.');
       } else if (err.response?.status === 429) {
-        setError('GitHub API limit reached. Try again later or add a GitHub token.');
-      } else {
-        setError(err.response?.data?.error || 'Failed to fetch pet data');
-      }
-      if (err.response?.status === 429) {
         setError('GitHub API limit reached. Try again later or add a GitHub token.');
       } else {
         setError(err.response?.data?.error || 'Failed to fetch pet data');
@@ -155,25 +161,30 @@ const PetPage = () => {
               <p className="motivation-message">{getMotivationalMessage()}</p>
 
               <div className="stat-row">
-                <span className="stat-label">Current Streak:</span>
-                <span className="stat-value">{petData.currentStreak ?? 0} days</span>
-                {petData.currentStreak > 0 && <span className="fire-emoji">🔥</span>}
+                <span className="stat-label">Overall Streak:</span>
+                <span className="stat-value">
+                  {Math.max(petData.currentStreak ?? 0, petData.currentLeetcodeStreak ?? 0)} days
+                </span>
+                {(petData.currentStreak > 0 || petData.currentLeetcodeStreak > 0) && <span className="fire-emoji">🔥</span>}
               </div>
 
-              <div className="stat-row">
-                <span className="stat-label">Longest Streak:</span>
-                <span className="stat-value">{petData.longestStreak ?? 0} days</span>
+              <div className="stat-row tooltip-container">
+                <span className="stat-label">Longest Overall Streak:</span>
+                <span className="stat-value">{Math.max(petData.longestStreak ?? 0, petData.longestLeetcodeStreak ?? 0)} days</span>
+                
               </div>
 
               <div className="progress-container">
                 <div className="progress-bar">
                   <div 
                     className="progress-fill"
-                    style={{ width: `${((petData.currentStreak ?? 0) / 21) * 100}%` }}
-                  ></div>
+                    style={{ 
+                      width: `${(Math.max(petData.currentStreak ?? 0, petData.currentLeetcodeStreak ?? 0) / 21) * 100}%` 
+                    }}
+                  />
                 </div>
                 <div className="progress-text">
-                  {Math.round((1-(petData.currentStreak ?? 0) / 21) * 100)}% to next evolution
+                  {Math.round((1 - (Math.max(petData.currentStreak ?? 0, petData.currentLeetcodeStreak ?? 0) / 21)) * 100)}% to next evolution
                 </div>
               </div>
 

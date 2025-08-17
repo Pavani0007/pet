@@ -8,35 +8,40 @@ const ReposPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [githubStats, setGithubStats] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
   const username = location.state?.username || localStorage.getItem('github-username') || '';
 
   const API_BASE_URL = 'http://localhost:5000';
 
-  const fetchUserRepos = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!username) return;
     
     setLoading(true);
     setError('');
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/user-repos/${username}`);
+      const [reposRes, statsRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/api/user-repos/${username}`),
+        axios.get(`${API_BASE_URL}/api/pet/${username}`)
+      ]);
       
       // Sort by pushed_at date (newest first)
-      const sortedRepos = res.data.repos.sort((a, b) => {
+      const sortedRepos = reposRes.data.repos.sort((a, b) => {
         return new Date(b.pushed_at) - new Date(a.pushed_at);
       });
 
       setRepos(sortedRepos);
+      setGithubStats(statsRes.data);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to fetch repositories');
+      setError(err.response?.data?.error || 'Failed to fetch data');
     }
     setLoading(false);
   }, [username, API_BASE_URL]);
 
   useEffect(() => {
-    fetchUserRepos();
-  }, [fetchUserRepos]);
+    fetchData();
+  }, [fetchData]);
 
   const handleBackToPet = () => {
     navigate('/');
@@ -77,6 +82,20 @@ const ReposPage = () => {
 
       {!loading && !error && (
         <>
+          <div className="github-stats">
+            <div className="stat-card">
+              <h3>GitHub Streak</h3>
+              <div className="stat-value">{githubStats?.currentStreak ?? 0} days {githubStats?.currentStreak > 0 && '🔥'}</div>
+              <div className="stat-label">Current Streak</div>
+            </div>
+           
+            <div className="stat-card">
+              <h3>Total Commits</h3>
+              <div className="stat-value">{githubStats?.totalCommits ?? 0}</div>
+              <div className="stat-label">Last 30 Days</div>
+            </div>
+          </div>
+
           <div className="repo-count">
             Showing {filteredRepos.length} of {repos.length} repositories
           </div>

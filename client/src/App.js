@@ -10,7 +10,7 @@ function App() {
     <Router>
       <div className="app-container">
         <header className="app-header">
-          <h1>GitHub Companion</h1>
+          <h1>Pet Companion</h1>
           <nav className="main-nav">
             <Link to="/" className="nav-link">My Pet</Link>
             <Link to="/repos" className="nav-link">My Repos</Link>

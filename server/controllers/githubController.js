@@ -152,10 +152,12 @@ export const updatePetStats = async (req, res) => {
       username: user.githubUsername,
       currentStreak: user.currentStreak,
       longestStreak: user.longestStreak,
+      currentLeetcodeStreak: user.currentLeetcodeStreak || 0,
+      leetcodeUsername: user.leetcodeUsername,
       petStage: user.petStage,
       totalCommits: user.totalCommits,
       lastCommitDate: user.lastCommitDate,
-      streakSame:null,
+      streakSame: null,
       message: getPetMessage(user.petStage)
     });
 

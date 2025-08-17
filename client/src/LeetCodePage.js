@@ -109,6 +109,13 @@ const LeetCodePage = () => {
                   <div className="leetcode-count">{leetcodeData.totalSolved}</div>
                 </div>
 
+                <div className="leetcode-card streak">
+                  <h4>Current Streak</h4>
+                  <div className="leetcode-count">
+                    {leetcodeData.currentStreak} days {leetcodeData.currentStreak > 0 && '🔥'}
+                  </div>
+                </div>
+
                 <div className="leetcode-card easy">
                   <h4>Easy</h4>
                   <div className="leetcode-count">{leetcodeData.easySolved || 0}</div>

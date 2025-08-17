@@ -23,7 +23,10 @@ const userSchema = new mongoose.Schema({
   lastCommitDate: Date,
   lastLeetcodeDate: Date,
   totalCommits: { type: Number, default: 0 },
-  totalLeetcode: { type: Number, default: 0 }
+  totalLeetcode: { type: Number, default: 0 },
+  currentLeetcodeStreak: { type: Number, default: 0 },
+  lastLeetcodeSubmission: Date,
+  currentLeetcodeStreak: { type: Number, default: 0 }
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);
