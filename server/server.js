@@ -82,6 +82,20 @@ app.use('/api', apiLimiter);
 app.use('/api', githubRouter);  // Handles /api/pet/:username and /api/user-repos/:username
 app.use('/api/user', userRouter); // Handles /api/user/leetcode and /api/user/leetcode/:username
 
+// Root route
+app.get('/', (req, res) => {
+  res.status(200).json({
+    message: 'Welcome to Pet API!',
+    routes: [
+      '/api/pet/:username',
+      '/api/user-repos/:username',
+      '/api/user/leetcode',
+      '/api/user/leetcode/:username',
+      '/health'
+    ]
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.status(200).json({
