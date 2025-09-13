@@ -3,7 +3,7 @@ import { connectLeetCode, getLeetCodeStats } from '../controllers/userController
 
 const router = express.Router();
 
-router.post('https://pet-5qsa.onrender.com/api/leetcode', connectLeetCode);
-router.get('https://pet-5qsa.onrender.com/api/leetcode/:username', getLeetCodeStats);  // Add this route
+router.post('/pet-5qsa.onrender.com/api/leetcode', connectLeetCode);
+router.get('/pet-5qsa.onrender.com/api/leetcode/:username', getLeetCodeStats);  // Add this route
 
 export default router;
