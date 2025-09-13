@@ -65,7 +65,11 @@ await connectWithRetry();
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    "https://pet-git-main-pavanis-projects-25e73a1a.vercel.app",
+    "https://pet-kmcc7tst9-pavanis-projects-25e73a1a.vercel.app"
+  ],
   methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
