@@ -10,7 +10,7 @@ const LeetCodeForm = ({ githubUsername, onClose }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const API_BASE_URL = 'http://localhost:5000';
+  const API_BASE_URL = API_BASE;
 
   const handleSubmit = async (e) => {
     e.preventDefault();

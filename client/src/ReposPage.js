@@ -14,7 +14,7 @@ const ReposPage = () => {
   const navigate = useNavigate();
   const username = location.state?.username || localStorage.getItem('github-username') || '';
 
-  const API_BASE_URL = 'http://localhost:5000';
+  const API_BASE_URL = API_BASE;
 
   const fetchData = useCallback(async () => {
     if (!username) return;
