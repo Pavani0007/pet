@@ -5,6 +5,7 @@ import Confetti from 'react-confetti';
 import { useNavigate } from 'react-router-dom';
 import './App.css';
 import LeetCodeForm from './components/LeetCodeForm';
+export const API_BASE = "https://pet-5qsa.onrender.com";
 
 const PetPage = () => {
   const [username, setUsername] = useState(() => {

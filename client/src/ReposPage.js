@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './App.css';
+export const API_BASE = "https://pet-5qsa.onrender.com";
 
 const ReposPage = () => {
   const [repos, setRepos] = useState([]);

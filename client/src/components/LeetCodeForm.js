@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import '../App.css';
 
+export const API_BASE = "https://pet-5qsa.onrender.com";
+
 const LeetCodeForm = ({ githubUsername, onClose }) => {
   const [leetcodeUsername, setLeetcodeUsername] = useState('');
   const [loading, setLoading] = useState(false);

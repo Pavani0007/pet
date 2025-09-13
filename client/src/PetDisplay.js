@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Confetti from 'react-confetti';
 
+export const API_BASE = "https://pet-5qsa.onrender.com";
+
 const PetDisplay = ({ username }) => {
   const [petData, setPetData] = useState(null);
   const [loading, setLoading] = useState(false);
